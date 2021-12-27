@@ -40,7 +40,12 @@ public class SpeechListener implements RecognitionListener {
   @Override
   public void onResult(String hypothesis) {
     String word = getRecognizedWord(hypothesis);
+
     if (word == null) {
+      if (isInRecognizingMode) {
+        // don't have new words from user, stop recognizing and return to initial state
+        stopRecognizing();
+      }
       return;
     }
 
