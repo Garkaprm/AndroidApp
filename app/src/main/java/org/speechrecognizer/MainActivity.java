@@ -13,12 +13,18 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.IOException;
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
 import org.vosk.Model;
+import org.vosk.Recognizer;
+import org.vosk.android.SpeechService;
 import org.vosk.android.StorageService;
 
-public class MainActivity extends AppCompatActivity {
+/**
+ * Main application activity.
+ */
+public class MainActivity extends AppCompatActivity implements IActivityUpdater {
 
   private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
 
@@ -26,6 +32,30 @@ public class MainActivity extends AppCompatActivity {
   private ImageView activeRecognizingIcon;
 
   private Model voskModel;
+  private SpeechService speechService;
+
+
+  @Override
+  public void showError(String error) {
+    textArea.setText(error);
+  }
+
+  @Override
+  public void addRecognizedWord(String word) {
+    textArea.append(word + " ");
+  }
+
+  @Override
+  public void onBeginRecognizing() {
+    textArea.setText("");
+    activeRecognizingIcon.setVisibility(View.VISIBLE);
+  }
+
+  @Override
+  public void onEndRecognizing() {
+    textArea.setText(R.string.ready_message);
+    activeRecognizingIcon.setVisibility(View.INVISIBLE);
+  }
 
   @Override
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
@@ -56,6 +86,17 @@ public class MainActivity extends AppCompatActivity {
       initModel();
     } else {
       requestPermissions();
+    }
+  }
+
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+
+    if (speechService != null) {
+      speechService.stop();
+      speechService.shutdown();
+      speechService = null;
     }
   }
 
@@ -90,10 +131,12 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void startListening() {
-    // TODO
-  }
-
-  private void showError(String message) {
-    textArea.setText(message);
+    try {
+      Recognizer rec = new Recognizer(voskModel, 16000.0f);
+      speechService = new SpeechService(rec, 16000.0f);
+      speechService.startListening(new SpeechListener(this));
+    } catch (IOException e) {
+      showError("Ошибка: " + e.getMessage());
+    }
   }
 }

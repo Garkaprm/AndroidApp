@@ -3,4 +3,5 @@
     <string name="wait_message">Подождите...</string>
     <string name="ready_message">Скажите \"Привет\" для начала распознавания</string>
     <string name="mic_content_description">recognizing icon</string>
+    <string name="begin_recognize_word">привет</string>
 </resources>
