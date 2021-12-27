@@ -1,7 +1,6 @@
 package org.speechrecognizer;
 
 import android.util.Log;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -14,6 +13,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Observable;
 import java.io.IOException;
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
@@ -25,7 +26,7 @@ import org.vosk.android.StorageService;
 /**
  * Main application activity.
  */
-public class MainActivity extends AppCompatActivity implements IActivityUpdater {
+public class MainActivity extends AppCompatActivity {
 
   private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
 
@@ -34,28 +35,7 @@ public class MainActivity extends AppCompatActivity implements IActivityUpdater 
 
   private Model voskModel;
   private SpeechService speechService;
-
-  @Override
-  public void showError(String error) {
-    textArea.setText(error);
-  }
-
-  @Override
-  public void addRecognizedWord(String word) {
-    textArea.append(word + " ");
-  }
-
-  @Override
-  public void onBeginRecognizing() {
-    textArea.setText("");
-    activeRecognizingIcon.setVisibility(View.VISIBLE);
-  }
-
-  @Override
-  public void onEndRecognizing() {
-    textArea.setText(R.string.ready_message);
-    activeRecognizingIcon.setVisibility(View.INVISIBLE);
-  }
+  private SpeechListener speechListener;
 
   @Override
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
@@ -124,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements IActivityUpdater 
     StorageService.unpack(this, "model-ru", "model",
         model -> {
           this.voskModel = model;
-          textArea.setText(R.string.ready_message);
+          showReadyMessage();
           startListening();
         },
         exception -> {
@@ -135,9 +115,20 @@ public class MainActivity extends AppCompatActivity implements IActivityUpdater 
 
   private void startListening() {
     try {
-      Recognizer rec = new Recognizer(voskModel, 16000.0f);
-      speechService = new SpeechService(rec, 16000.0f);
-      speechService.startListening(new SpeechListener(this, getBeginRecognizingWord()));
+      boolean isFirstTime = speechListener == null;
+
+      if (isFirstTime) {
+        Recognizer rec = new Recognizer(voskModel, 16000.0f);
+        this.speechService = new SpeechService(rec, 16000.0f);
+        this.speechListener = new SpeechListener(getBeginRecognizingWord());
+      }
+
+      Observable.create(speechListener)
+          .subscribe(this::onNextWord, this::onError, this::onEndRecognizing);
+
+      if (isFirstTime) {
+        speechService.startListening(speechListener);
+      }
     } catch (IOException e) {
       Log.e(MainActivity.class.getName(), e.getMessage(), e);
       showError("Ошибка: " + e.getMessage());
@@ -146,5 +137,43 @@ public class MainActivity extends AppCompatActivity implements IActivityUpdater 
 
   private String getBeginRecognizingWord() {
     return getApplicationContext().getResources().getText(R.string.begin_recognize_word).toString();
+  }
+
+  private void onNextWord(@NonNull String word) {
+    if (SpeechListener.START_RECOGNITION_EVENT.equals(word)) {
+      onBeginRecognizing();
+    } else {
+      addRecognizedWord(word);
+    }
+  }
+
+  private void addRecognizedWord(@NonNull String word) {
+    textArea.append(word + " ");
+  }
+
+  private void onError(@NonNull Throwable e) {
+    Log.e(MainActivity.class.getName(), e.getMessage(), e);
+    showError("Ошибка распознавания: " + e.getMessage());
+  }
+
+  private void showError(String error) {
+    textArea.setText(error);
+  }
+
+  private void onBeginRecognizing() {
+    textArea.setText("");
+    activeRecognizingIcon.setVisibility(View.VISIBLE);
+  }
+
+  private void onEndRecognizing() {
+    showReadyMessage();
+
+    // start listening again for the next phrase
+    startListening();
+  }
+
+  private void showReadyMessage() {
+    textArea.setText(R.string.ready_message);
+    activeRecognizingIcon.setVisibility(View.INVISIBLE);
   }
 }
