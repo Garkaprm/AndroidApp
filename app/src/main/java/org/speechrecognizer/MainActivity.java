@@ -15,6 +15,8 @@ import android.widget.TextView;
 
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
+import org.vosk.Model;
+import org.vosk.android.StorageService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,6 +24,8 @@ public class MainActivity extends AppCompatActivity {
 
   private TextView textArea;
   private ImageView activeRecognizingIcon;
+
+  private Model voskModel;
 
   @Override
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
@@ -76,6 +80,20 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void initModel() {
+    StorageService.unpack(this, "model-ru", "model",
+        model -> {
+          this.voskModel = model;
+          textArea.setText(R.string.ready_message);
+          startListening();
+        },
+        exception -> showError("Ошибка инициализации модели: " + exception.getMessage()));
+  }
+
+  private void startListening() {
     // TODO
+  }
+
+  private void showError(String message) {
+    textArea.setText(message);
   }
 }
