@@ -34,7 +34,6 @@ public class MainActivity extends AppCompatActivity implements IActivityUpdater 
   private Model voskModel;
   private SpeechService speechService;
 
-
   @Override
   public void showError(String error) {
     textArea.setText(error);
