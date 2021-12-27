@@ -1,22 +1,17 @@
-package org.speechrecognizer;
+package org.speechrecognizer.impl;
 
 import android.util.Log;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.ObservableEmitter;
-import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.speechrecognizer.ISpeechListener;
 import org.vosk.android.RecognitionListener;
 
 /**
  * A listener of user's speech.
  */
-public class SpeechListener implements RecognitionListener, ObservableOnSubscribe<String> {
-
-  /**
-   * Indentifies moment of recognition start.
-   */
-  public static final String START_RECOGNITION_EVENT = "START_RECOGNITION_EVENT";
+public class SpeechListener implements ISpeechListener, RecognitionListener {
 
   private final String beginRecognizingWord;
 
