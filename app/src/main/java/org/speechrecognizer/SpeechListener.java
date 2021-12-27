@@ -65,6 +65,7 @@ public class SpeechListener implements RecognitionListener {
 
   @Override
   public void onError(Exception exception) {
+    Log.e(SpeechListener.class.getName(), exception.getMessage(), exception);
     activityUpdater.showError("Ошибка при распознавании:" + exception.getMessage());
   }
 

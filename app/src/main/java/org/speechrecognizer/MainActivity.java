@@ -1,5 +1,6 @@
 package org.speechrecognizer;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -126,7 +127,10 @@ public class MainActivity extends AppCompatActivity implements IActivityUpdater 
           textArea.setText(R.string.ready_message);
           startListening();
         },
-        exception -> showError("Ошибка инициализации модели: " + exception.getMessage()));
+        exception -> {
+          Log.e(MainActivity.class.getName(), exception.getMessage(), exception);
+          showError("Ошибка инициализации модели: " + exception.getMessage());
+        });
   }
 
   private void startListening() {
@@ -135,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements IActivityUpdater 
       speechService = new SpeechService(rec, 16000.0f);
       speechService.startListening(new SpeechListener(this, getBeginRecognizingWord()));
     } catch (IOException e) {
+      Log.e(MainActivity.class.getName(), e.getMessage(), e);
       showError("Ошибка: " + e.getMessage());
     }
   }
