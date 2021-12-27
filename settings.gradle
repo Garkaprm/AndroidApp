@@ -6,4 +6,5 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "SpeechRecognizer"
+include ':models'
 include ':app'

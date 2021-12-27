@@ -1,0 +1,38 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdk 31
+
+    defaultConfig {
+        minSdk 25
+        targetSdk 31
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildFeatures {
+        buildConfig = false
+    }
+    sourceSets {
+        main {
+            assets.srcDirs += "$buildDir/generated/assets"
+        }
+    }
+}
+
+tasks.register('genUUID') {
+    def uuid = UUID.randomUUID().toString()
+    def odir = file("$buildDir/generated/assets/model-ru")
+    def ofile = file("$odir/uuid")
+    doLast {
+        mkdir odir
+        ofile.text = uuid
+    }
+}
+
+preBuild.dependsOn(genUUID)
