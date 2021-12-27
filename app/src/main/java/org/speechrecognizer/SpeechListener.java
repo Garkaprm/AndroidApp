@@ -1,7 +1,9 @@
 package org.speechrecognizer;
 
 import android.util.Log;
-import androidx.annotation.NonNull;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.ObservableEmitter;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.vosk.android.RecognitionListener;
@@ -9,27 +11,34 @@ import org.vosk.android.RecognitionListener;
 /**
  * A listener of user's speech.
  */
-public class SpeechListener implements RecognitionListener {
+public class SpeechListener implements RecognitionListener, ObservableOnSubscribe<String> {
 
-  private final IActivityUpdater activityUpdater;
+  /**
+   * Indentifies moment of recognition start.
+   */
+  public static final String START_RECOGNITION_EVENT = "START_RECOGNITION_EVENT";
+
   private final String beginRecognizingWord;
 
+  private ObservableEmitter<String> dataSubscriber;
   private boolean isInRecognizingMode;
 
   /**
    * Creates listener instance.
    *
-   * @param activityUpdater      the activity updater, cannot be {@code null}
    * @param beginRecognizingWord the word indicating start recognizing mode, cannot be {@code null}
    *                             or empty
    */
-  public SpeechListener(@NonNull IActivityUpdater activityUpdater,
-      @NonNull String beginRecognizingWord) {
+  public SpeechListener(@NonNull String beginRecognizingWord) {
     if (beginRecognizingWord.isEmpty()) {
-      throw new IllegalArgumentException("Bad argument given: beginRecognizingWord");
+      throw new IllegalArgumentException("Bad argument given: beginRecognizingWord cannot be empty");
     }
-    this.activityUpdater = activityUpdater;
     this.beginRecognizingWord = beginRecognizingWord;
+  }
+
+  @Override
+  public void subscribe(@NonNull ObservableEmitter<String> emitter) {
+    this.dataSubscriber = emitter;
   }
 
   @Override
@@ -43,17 +52,17 @@ public class SpeechListener implements RecognitionListener {
 
     if (word == null) {
       if (isInRecognizingMode) {
-        // don't have new words from user, stop recognizing and return to initial state
+        // don't have new words from user, stop recognizing
         stopRecognizing();
       }
       return;
     }
 
     if (isInRecognizingMode) {
-      activityUpdater.addRecognizedWord(word);
+      dataSubscriber.onNext(word);
     } else if (beginRecognizingWord.equalsIgnoreCase(word)) {
       isInRecognizingMode = true;
-      activityUpdater.onBeginRecognizing();
+      dataSubscriber.onNext(START_RECOGNITION_EVENT);
     }
     // else do nothing, not our control word
   }
@@ -65,8 +74,7 @@ public class SpeechListener implements RecognitionListener {
 
   @Override
   public void onError(Exception exception) {
-    Log.e(SpeechListener.class.getName(), exception.getMessage(), exception);
-    activityUpdater.showError("Ошибка при распознавании:" + exception.getMessage());
+    dataSubscriber.onError(exception);
   }
 
   @Override
@@ -76,7 +84,7 @@ public class SpeechListener implements RecognitionListener {
 
   private void stopRecognizing() {
     isInRecognizingMode = false;
-    activityUpdater.onEndRecognizing();
+    dataSubscriber.onComplete();
   }
 
   /*
