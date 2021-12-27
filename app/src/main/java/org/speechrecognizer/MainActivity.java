@@ -134,9 +134,13 @@ public class MainActivity extends AppCompatActivity implements IActivityUpdater 
     try {
       Recognizer rec = new Recognizer(voskModel, 16000.0f);
       speechService = new SpeechService(rec, 16000.0f);
-      speechService.startListening(new SpeechListener(this));
+      speechService.startListening(new SpeechListener(this, getBeginRecognizingWord()));
     } catch (IOException e) {
       showError("Ошибка: " + e.getMessage());
     }
+  }
+
+  private String getBeginRecognizingWord() {
+    return getApplicationContext().getResources().getText(R.string.begin_recognize_word).toString();
   }
 }

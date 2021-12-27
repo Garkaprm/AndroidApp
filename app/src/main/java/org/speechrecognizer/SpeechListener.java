@@ -12,16 +12,24 @@ import org.vosk.android.RecognitionListener;
 public class SpeechListener implements RecognitionListener {
 
   private final IActivityUpdater activityUpdater;
+  private final String beginRecognizingWord;
 
   private boolean isInRecognizingMode;
 
   /**
    * Creates listener instance.
    *
-   * @param activityUpdater the activity updater, cannot be {@code null}
+   * @param activityUpdater      the activity updater, cannot be {@code null}
+   * @param beginRecognizingWord the word indicating start recognizing mode, cannot be {@code null}
+   *                             or empty
    */
-  public SpeechListener(@NonNull IActivityUpdater activityUpdater) {
+  public SpeechListener(@NonNull IActivityUpdater activityUpdater,
+      @NonNull String beginRecognizingWord) {
+    if (beginRecognizingWord.isEmpty()) {
+      throw new IllegalArgumentException("Bad argument given: beginRecognizingWord");
+    }
     this.activityUpdater = activityUpdater;
+    this.beginRecognizingWord = beginRecognizingWord;
   }
 
   @Override
@@ -38,7 +46,7 @@ public class SpeechListener implements RecognitionListener {
 
     if (isInRecognizingMode) {
       activityUpdater.addRecognizedWord(word);
-    } else if (word.equals(R.string.begin_recognize_word)) {
+    } else if (beginRecognizingWord.equalsIgnoreCase(word)) {
       isInRecognizingMode = true;
       activityUpdater.onBeginRecognizing();
     }
