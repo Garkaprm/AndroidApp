@@ -1,5 +1,7 @@
 package org.speechrecognizer;
 
+import static org.speechrecognizer.ISpeechListener.START_RECOGNITION_EVENT;
+
 import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -15,13 +17,10 @@ import android.widget.TextView;
 
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
-import java.io.IOException;
+import javax.inject.Inject;
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
-import org.vosk.Model;
-import org.vosk.Recognizer;
-import org.vosk.android.SpeechService;
-import org.vosk.android.StorageService;
+import toothpick.Toothpick;
 
 /**
  * Main application activity.
@@ -33,9 +32,8 @@ public class MainActivity extends AppCompatActivity {
   private TextView textArea;
   private ImageView activeRecognizingIcon;
 
-  private Model voskModel;
-  private SpeechService speechService;
-  private SpeechListener speechListener;
+  @Inject
+  RecognizeSpeechService recognitionService;
 
   @Override
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
@@ -44,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
 
     if (requestCode == PERMISSIONS_REQUEST_RECORD_AUDIO) {
       if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-        // permissions obtained, can begin model initialization
-        initModel();
+        // permissions obtained, can begin initialization
+        initializeSpeechService();
       } else {
         // can't work in such case
         finish();
@@ -62,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
     prepareUi();
 
     if (hasRequiredPermissions()) {
-      // can begin model initialization
-      initModel();
+      // can begin initialization
+      initializeSpeechService();
     } else {
       requestPermissions();
     }
@@ -72,12 +70,7 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-
-    if (speechService != null) {
-      speechService.stop();
-      speechService.shutdown();
-      speechService = null;
-    }
+    recognitionService.close();
   }
 
   private void prepareUi() {
@@ -100,47 +93,25 @@ public class MainActivity extends AppCompatActivity {
         PERMISSIONS_REQUEST_RECORD_AUDIO);
   }
 
-  private void initModel() {
-    StorageService.unpack(this, "model-ru", "model",
-        model -> {
-          this.voskModel = model;
-          showReadyMessage();
-          startListening();
-        },
-        exception -> {
-          Log.e(MainActivity.class.getName(), exception.getMessage(), exception);
-          showError("Ошибка инициализации модели: " + exception.getMessage());
-        });
+  private void initializeSpeechService() {
+    Toothpick.inject(this, Toothpick.openScope(App.APP_SCOPE_NAME));
+
+    recognitionService.initialize(this, () -> {
+      showReadyMessage();
+      startListening();
+    }, exception -> {
+      Log.e(MainActivity.class.getName(), exception.getMessage(), exception);
+      showError("Ошибка инициализации: " + exception.getMessage());
+    });
   }
 
   private void startListening() {
-    try {
-      boolean isFirstTime = speechListener == null;
-
-      if (isFirstTime) {
-        Recognizer rec = new Recognizer(voskModel, 16000.0f);
-        this.speechService = new SpeechService(rec, 16000.0f);
-        this.speechListener = new SpeechListener(getBeginRecognizingWord());
-      }
-
-      Observable.create(speechListener)
+    Observable.create(recognitionService.getSpeechListener())
           .subscribe(this::onNextWord, this::onError, this::onEndRecognizing);
-
-      if (isFirstTime) {
-        speechService.startListening(speechListener);
-      }
-    } catch (IOException e) {
-      Log.e(MainActivity.class.getName(), e.getMessage(), e);
-      showError("Ошибка: " + e.getMessage());
-    }
-  }
-
-  private String getBeginRecognizingWord() {
-    return getApplicationContext().getResources().getText(R.string.begin_recognize_word).toString();
   }
 
   private void onNextWord(@NonNull String word) {
-    if (SpeechListener.START_RECOGNITION_EVENT.equals(word)) {
+    if (START_RECOGNITION_EVENT.equals(word)) {
       onBeginRecognizing();
     } else {
       addRecognizedWord(word);
