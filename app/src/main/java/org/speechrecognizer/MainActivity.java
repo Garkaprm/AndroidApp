@@ -141,10 +141,13 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void onEndRecognizing() {
-    showReadyMessage();
-
-    // start listening again for the next phrase
-    startListening();
+    // here start listening again for the next phrase
+    if (recognitionService == null) {
+      initializeSpeechService();
+    } else {
+      showReadyMessage();
+      startListening();
+    }
   }
 
   private void showReadyMessage() {
