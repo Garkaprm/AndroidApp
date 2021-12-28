@@ -16,6 +16,8 @@ import org.vosk.android.StorageService;
 @Singleton
 public final class RecognizeSpeechService {
 
+  private static final float SAMPLE_RATE = 16000.0f;
+
   private SpeechService voskSpeechService;
   private SpeechListener speechListener;
 
@@ -60,8 +62,8 @@ public final class RecognizeSpeechService {
     StorageService.unpack(context, "model-ru", "model",
         voskModel -> {
           try {
-            Recognizer rec = new Recognizer(voskModel, 16000.0f);
-            this.voskSpeechService = new SpeechService(rec, 16000.0f);
+            Recognizer rec = new Recognizer(voskModel, SAMPLE_RATE);
+            this.voskSpeechService = new SpeechService(rec, SAMPLE_RATE);
           } catch (IOException exception) {
             onErrorCallback.accept(exception);
             return;
