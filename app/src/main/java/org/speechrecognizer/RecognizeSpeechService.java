@@ -20,6 +20,7 @@ public final class RecognizeSpeechService {
 
   private SpeechService voskSpeechService;
   private SpeechListener speechListener;
+  private boolean isInitialized;
 
   /**
    * Initializes the service instance.
@@ -28,15 +29,19 @@ public final class RecognizeSpeechService {
    * @param onReadyCallback the callback called when initialization done, cannot be {@code null}
    * @param onErrorCallback the callback called if initialization failed, cannot be {@code null}
    */
-  public void initialize(@NonNull Context context, @NonNull Runnable onReadyCallback,
+  public synchronized void initialize(@NonNull Context context, @NonNull Runnable onReadyCallback,
       @NonNull Consumer<? super Throwable> onErrorCallback) {
-    initVosk(context, onReadyCallback, onErrorCallback);
+    if (!isInitialized) {
+      initVosk(context, onReadyCallback, onErrorCallback);
+    } else {
+      onReadyCallback.run();
+    }
   }
 
   /**
    * Closes the service.
    */
-  public void close() {
+  public synchronized void close() {
     speechListener = null;
 
     if (voskSpeechService != null) {
@@ -44,6 +49,8 @@ public final class RecognizeSpeechService {
       voskSpeechService.shutdown();
       voskSpeechService = null;
     }
+
+    isInitialized = false;
   }
 
   /**
@@ -74,6 +81,7 @@ public final class RecognizeSpeechService {
 
           // run startListening() AFTER callback call to complete initialization before real listening start
           voskSpeechService.startListening(speechListener);
+          isInitialized = true;
         },
         exception -> onErrorCallback.accept(exception));
   }
