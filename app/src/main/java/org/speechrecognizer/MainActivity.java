@@ -70,7 +70,11 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    recognitionService.close();
+
+    if (recognitionService != null) {
+      recognitionService.close();
+      recognitionService = null;
+    }
   }
 
   private void prepareUi() {
