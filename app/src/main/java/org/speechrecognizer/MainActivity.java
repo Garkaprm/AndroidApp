@@ -20,6 +20,9 @@ import io.reactivex.rxjava3.core.Observable;
 import javax.inject.Inject;
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
+
+import java.io.CharArrayWriter;
+
 import toothpick.Toothpick;
 
 /**
@@ -30,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
   private static final int PERMISSIONS_REQUEST_RECORD_AUDIO = 1;
 
   private TextView textArea;
+
   private ImageView activeRecognizingIcon;
 
   @Inject
@@ -123,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void addRecognizedWord(@NonNull String word) {
+
     textArea.append(word + " ");
   }
 
