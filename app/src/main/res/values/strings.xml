@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Speech Recognizer</string>
+    <string name="app_name">Translater Speech</string>
     <string name="wait_message">Подождите...</string>
     <string name="ready_message">Скажите \"Перевод\" для начала распознавания</string>
     <string name="mic_content_description">recognizing icon</string>

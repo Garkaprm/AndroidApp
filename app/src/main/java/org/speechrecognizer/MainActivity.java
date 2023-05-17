@@ -18,8 +18,6 @@ import androidx.core.content.ContextCompat;
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
 
-import java.io.IOException;
-
 import javax.inject.Inject;
 
 import io.reactivex.rxjava3.annotations.NonNull;
@@ -153,30 +151,33 @@ public class MainActivity extends AppCompatActivity {
     activeRecognizingIcon.setVisibility(View.VISIBLE);
   }
 
-  private void onEndRecognizing() throws IOException {
+  private void onEndRecognizing() {
     // here start listening again for the next phrase
     if (recognitionService == null) {
       initializeSpeechService();
     } else {
-      showReadyTransMessage();
+      //showReadyTransMessage(); //Выводить начальную фразу на экран
+      showTranslate(textArea.getText()); //Оставлять на экране перевод
       startListening();
     }
   }
 
-  private void showReadyMessage() {
+  private void showReadyTransMessage() {
     textArea.setText(R.string.ready_message);
     activeRecognizingIcon.setVisibility(View.INVISIBLE);
-  }
-
-
-  private void showReadyTransMessage() {
-    Runnable task = () -> {
+    /*Runnable task = () -> {
       GoogleTranslateUtil trans = new GoogleTranslateUtil();
       String TransText = trans.translate("AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw", getString(R.string.ready_message), "ru", "en");
       textArea.setText(TransText);
       activeRecognizingIcon.setVisibility(View.INVISIBLE);
     };
     Thread thread = new Thread(task);
-    thread.start();
+    thread.start();*/
+  }
+
+  private void showTranslate(CharSequence text) {
+    textArea.setText(text + "\n\n\n Скажите \"Перевод\" для повторного распознавания");
+    activeRecognizingIcon.setVisibility(View.INVISIBLE);
+
   }
 }
