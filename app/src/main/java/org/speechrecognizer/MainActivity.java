@@ -2,27 +2,26 @@ package org.speechrecognizer;
 
 import static org.speechrecognizer.ISpeechListener.START_RECOGNITION_EVENT;
 
-import android.util.Log;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import io.reactivex.rxjava3.annotations.NonNull;
-import io.reactivex.rxjava3.core.Observable;
-import javax.inject.Inject;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
 
-import java.io.CharArrayWriter;
+import javax.inject.Inject;
 
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Observable;
 import toothpick.Toothpick;
 
 /**
@@ -105,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
     Toothpick.inject(this, Toothpick.openScope(App.APP_SCOPE_NAME));
 
     recognitionService.initialize(this, () -> {
-      showReadyMessage();
+      showReadyTransMessage();
       startListening();
     }, exception -> {
       Log.e(MainActivity.class.getName(), exception.getMessage(), exception);
@@ -150,13 +149,21 @@ public class MainActivity extends AppCompatActivity {
     if (recognitionService == null) {
       initializeSpeechService();
     } else {
-      showReadyMessage();
+      showReadyTransMessage();
       startListening();
     }
   }
 
   private void showReadyMessage() {
     textArea.setText(R.string.ready_message);
+    activeRecognizingIcon.setVisibility(View.INVISIBLE);
+  }
+
+
+  private void showReadyTransMessage() {
+    GoogleTranslateUtil trans = new GoogleTranslateUtil();
+    String TransText = trans.translate("AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw", getString(R.string.ready_message), "en", "ru");
+    textArea.setText(TransText);
     activeRecognizingIcon.setVisibility(View.INVISIBLE);
   }
 }

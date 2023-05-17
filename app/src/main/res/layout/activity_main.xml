@@ -43,15 +43,4 @@
         android:orientation="vertical"
         app:layout_constraintGuide_begin="20dp" />
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="366dp"
-        android:layout_height="48dp"
-        android:visibility="visible"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:ignore="MissingConstraints"
-        tools:layout_editor_absoluteY="17dp" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>
