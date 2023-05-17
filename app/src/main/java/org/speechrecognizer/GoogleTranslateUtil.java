@@ -15,28 +15,28 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 import javax.net.ssl.HttpsURLConnection;
+
 /**
  *
  * @author Jamie Reid
  */
-public class GoogleTranslateUtil  {
+public class GoogleTranslateUtil extends Thread {
     private final static Logger logger = LogManager.getLogger(GoogleTranslateUtil.class);
 
     /**
-     *  This method translates text from one language to another
-     * @param apiKey        The google API key
-     * @param text          The text to translate
-     * @param fromLanguage  The language code to translate from
-     * @param toLanguage    The language code to translate to
+     * This method translates text from one language to another
      *
+     * @param apiKey       The google API key
+     * @param text         The text to translate
+     * @param fromLanguage The language code to translate from
+     * @param toLanguage   The language code to translate to
      * @return The translated text
      */
-    public static String translate(String apiKey, String text, String fromLanguage, String toLanguage) {
+    public String translate(String apiKey, String text, String fromLanguage, String toLanguage) {
         StringBuilder result = new StringBuilder();
         try {
             String encodedText = URLEncoder.encode(text, "UTF-8");
             String urlStr = "https://www.googleapis.com/language/translate/v2?key=" + apiKey + "&q=" + encodedText + "&target=" + toLanguage + "&source=" + fromLanguage + "&format=text";
-
             URL url = new URL(urlStr);
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
             InputStream stream;
@@ -72,3 +72,4 @@ public class GoogleTranslateUtil  {
         return null;
     }
 }
+

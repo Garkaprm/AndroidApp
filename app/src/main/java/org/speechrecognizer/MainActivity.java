@@ -18,6 +18,8 @@ import androidx.core.content.ContextCompat;
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
 
+import java.io.IOException;
+
 import javax.inject.Inject;
 
 import io.reactivex.rxjava3.annotations.NonNull;
@@ -104,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
     Toothpick.inject(this, Toothpick.openScope(App.APP_SCOPE_NAME));
 
     recognitionService.initialize(this, () -> {
-      showReadyTransMessage();
+        showReadyTransMessage();
       startListening();
     }, exception -> {
       Log.e(MainActivity.class.getName(), exception.getMessage(), exception);
@@ -127,7 +129,14 @@ public class MainActivity extends AppCompatActivity {
 
   private void addRecognizedWord(@NonNull String word) {
 
-    textArea.append(word + " ");
+    //textArea.append(word + " ");
+    Runnable task1 = () -> {
+      GoogleTranslateUtil trans = new GoogleTranslateUtil();
+      String TransText = trans.translate("AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw", word, "ru", "en");
+      textArea.append(TransText + " ");
+    };
+      Thread thread = new Thread(task1);
+      thread.start();
   }
 
   private void onError(@NonNull Throwable e) {
@@ -144,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
     activeRecognizingIcon.setVisibility(View.VISIBLE);
   }
 
-  private void onEndRecognizing() {
+  private void onEndRecognizing() throws IOException {
     // here start listening again for the next phrase
     if (recognitionService == null) {
       initializeSpeechService();
@@ -161,9 +170,13 @@ public class MainActivity extends AppCompatActivity {
 
 
   private void showReadyTransMessage() {
-    GoogleTranslateUtil trans = new GoogleTranslateUtil();
-    String TransText = trans.translate("AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw", getString(R.string.ready_message), "en", "ru");
-    textArea.setText(TransText);
-    activeRecognizingIcon.setVisibility(View.INVISIBLE);
+    Runnable task = () -> {
+      GoogleTranslateUtil trans = new GoogleTranslateUtil();
+      String TransText = trans.translate("AIzaSyBOti4mM-6x9WDnZIjIeyEU21OpBXqWBgw", getString(R.string.ready_message), "ru", "en");
+      textArea.setText(TransText);
+      activeRecognizingIcon.setVisibility(View.INVISIBLE);
+    };
+    Thread thread = new Thread(task);
+    thread.start();
   }
 }
